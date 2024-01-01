@@ -6,9 +6,15 @@
 |_____/_/\_\__,_|_| |_| |_| .__/|_|\___| |_____\__,_|\__,_|
                           |_|                              
 ```
+This is an example for a lua plugin for neovim.
 
-# Directory structure
+# Quick Local Development
+To try out some Lua just create a file `test.lua`, save it and source it with:
+`:so %`
+You can than run any function in this file with `:lua <function_name>()`.
 
+
+# Plugin Directory structure
 ```
 .
 ├── lua
@@ -87,3 +93,34 @@ end
 ```
 
 It can be called from the command line with `:lua JNI_HELLO()`
+
+# Miscellanous
+
+## User commands
+A user command can be called like `:TestMe` and created like:
+```lua
+vim.api.nvim_create_user_command("TestMe", TestMe, {})
+```
+
+## Autocommands
+To attach to a Neovim event you can use "autocommands" like:
+```lua
+vim.api.nvim_create_autocmd("BufWritePost", {
+    callback = TestMe,
+    pattern = "*.lua",
+})
+```
+To open the documentation for events use `:h events`.
+
+Example for reloading a plugin on save (you need to source the file):
+```lua
+vim.api.nvim_create_autocmd("BufWritePost", {
+    callback = function ()
+        -- Reload my plugin on saving a lua file
+        package.loaded["JniAdditions"] = nil
+        require("JniAdditions").load()
+    end,
+    pattern = "*.lua",
+})
+```
+
