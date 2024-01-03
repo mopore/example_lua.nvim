@@ -124,7 +124,6 @@ rerunning.
 ## Examples
 
 ### Example for reloading a plugin on save
-(you need to source the file with `:so %`)
 ```lua
 vim.api.nvim_create_autocmd("BufWritePost", {
     group = vim.api.nvim_create_augroup("JniAdditions", { clear = true }),
@@ -137,8 +136,53 @@ vim.api.nvim_create_autocmd("BufWritePost", {
 })
 ```
 
-### Advanced example
-Source with `:so %` 
+### Print the currently selected text in a new window (split)
+```lua
+local function get_v_text()
+    local a_orig = vim.fn.getreg('a')
+    local mode = vim.fn.mode()
+    if mode ~= 'v' and mode ~= 'V' then
+        vim.cmd([[normal! gv]])
+    end
+    vim.cmd([[silent! normal! "aygv]])
+    local text = vim.fn.getreg('a')
+    vim.fn.setreg('a', a_orig)
+    return text
+end
+
+local function open_new_buffer_with_text(text)
+    -- Split the window horizontally
+    vim.cmd('split')
+
+    -- Get the buffer of the new window
+    local new_buf = vim.api.nvim_create_buf(true, true)
+
+    -- Set the buffer for the current window
+    vim.api.nvim_win_set_buf(0, new_buf)
+
+    -- Split the text into lines
+    local lines = {}
+    for line in text:gmatch("([^\n]*)\n?") do
+        table.insert(lines, line)
+    end
+
+    -- Set the text for the new buffer
+    vim.api.nvim_buf_set_lines(new_buf, 0, -1, false, lines)
+
+    -- Optionally, set the buffer to be unmodifiable
+    vim.api.nvim_buf_set_option(new_buf, 'modifiable', false)
+end
+
+local function test_function()
+    local selectedText = get_v_text()
+    open_new_buffer_with_text(selectedText)
+end
+
+vim.keymap.set('v', '<leader>x', test_function, { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<F3>', ':lua print(vim.inspect(get_selected_text()))<CR>', { noremap = true })
+```
+
+### Call an external command and paste the output into current buffer
 This will add text to the current buffer from the output of a called command
 `helloworld`.
 
